@@ -63,6 +63,7 @@ static struct option options[] = {
 	{ "data", required_argument, NULL, 'd' },
 	{ "name", required_argument, NULL, 'n' },
 	{ "file", required_argument, NULL, 'f' },
+	{ "delete", required_argument, NULL, 'D' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "version", no_argument, NULL, 'V' },
 	{ NULL, 0, NULL, 0 },
@@ -82,7 +83,9 @@ static void usage(void)
 		"\t	ex. uefivarset -d \"11 22 33 ff\"\n"
 		"\t--file <file>      the date of the variable\n"
 		"\t	ex. uefivarset -f test.dat\n"
-		"\t	if data and file exist at the same time, the data will be set\n",
+		"\t	if data and file exist at the same time, the data will be set\n"
+		"\t--delete <file>      delete the variable\n"
+		"\t	ex. uefivarset -g 12345678-1234-1234-1234-112233445566 -name Test -D\n",
 		"uefivarset");
 }
 
@@ -252,6 +255,7 @@ int main(int argc, char **argv)
 	bool got_guid = false;
 	FILE *fp;
 	uint64_t flen = 0, frlen = 0;
+	bool del_var = false;
 
 	fd = init_driver();
 	if (fd == -1) {
@@ -261,7 +265,7 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		int idx;
-		c = getopt_long(argc, argv, "g:n:d:f:Vh", options, &idx);
+		c = getopt_long(argc, argv, "g:n:d:f:VhD", options, &idx);
 		if (c == -1)
 			break;
 
@@ -325,6 +329,9 @@ int main(int argc, char **argv)
 			}
 			fclose(fp);
 			break;
+		case 'D':
+			del_var = true;
+			break;
 		case 'V':
 			version();
 			return EXIT_SUCCESS;
@@ -350,6 +357,9 @@ int main(int argc, char **argv)
 		data = fdata;
 		fdata = NULL;
 	}
+
+	if (del_var)
+		datalen = 0;
 
 	variableset(fd, datalen, varname, data, &guid, &status);
 	if (status != 0)
