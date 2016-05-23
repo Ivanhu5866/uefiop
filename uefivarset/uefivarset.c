@@ -81,7 +81,8 @@ static void usage(void)
 		"\t--data <data>      the date in hex of the variable\n"
 		"\t	ex. uefivarset -d \"11 22 33 ff\"\n"
 		"\t--file <file>      the date of the variable\n"
-		"\t	ex. uefivarset -f test.dat\n",
+		"\t	ex. uefivarset -f test.dat\n"
+		"\t	if data and file exist at the same time, the data will be set\n",
 		"uefivarset");
 }
 
@@ -245,9 +246,12 @@ int main(int argc, char **argv)
 	size_t varlen = 0;
 	uint64_t datalen = 0;
 	uint8_t *data = NULL;
+	uint8_t *fdata = NULL;
 	uint64_t status;
 	char *str;
 	bool got_guid = false;
+	FILE *fp;
+	uint64_t flen = 0, frlen = 0;
 
 	fd = init_driver();
 	if (fd == -1) {
@@ -257,7 +261,7 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		int idx;
-		c = getopt_long(argc, argv, "g:n:d:fVh", options, &idx);
+		c = getopt_long(argc, argv, "g:n:d:f:Vh", options, &idx);
 		if (c == -1)
 			break;
 
@@ -299,7 +303,27 @@ int main(int argc, char **argv)
 			free(str);
 			break;
 		case 'f':
-			printf("f");
+			fp = fopen(optarg, "rb");
+    			if (!fp) {
+        			printf("error: cannot open file\n");
+				goto error;
+			}
+			fseek(fp, 0L, SEEK_END);
+			flen = ftell(fp);
+			rewind(fp);
+			if (flen != 0) {
+				fdata = (uint8_t *)malloc(flen + 1);
+				if (!fdata) {
+					printf ("error: cannot alloc memory\n");
+					goto error;
+				}
+				frlen = fread(fdata, flen, 1, fp);
+				if (!frlen) {
+					printf ("error: cannot read file\n");
+					goto error;
+				}
+			}
+			fclose(fp);
 			break;
 		case 'V':
 			version();
@@ -319,6 +343,14 @@ int main(int argc, char **argv)
 		goto error;
 	}
 
+	if (datalen == 0 && flen != 0)	{
+		datalen = flen;
+		if (!data)
+			free(data);
+		data = fdata;
+		fdata = NULL;
+	}
+
 	variableset(fd, datalen, varname, data, &guid, &status);
 	if (status != 0)
 		printf ("setvariable error! status: 0x%lx\n", status);
@@ -327,6 +359,9 @@ int main(int argc, char **argv)
 		free(varname);
 
 	if (!data)
+		free(fdata);
+
+	if (!fdata)
 		free(data);
 
 	close(fd);
@@ -342,6 +377,9 @@ error:
 
 	if (!str)
 		free(str);
+
+	if (!fdata)
+		free(fdata);
 
 	close(fd);
 
