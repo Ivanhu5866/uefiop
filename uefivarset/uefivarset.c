@@ -243,7 +243,7 @@ int main(int argc, char **argv)
 	efi_guid guid;
 	uint16_t *varname;
 	size_t varlen = 0;
-	int datalen = 0;
+	uint64_t datalen = 0;
 	uint8_t *data = NULL;
 	uint64_t status;
 	char *str;
@@ -280,14 +280,12 @@ int main(int argc, char **argv)
 			str_to_ucs(varname, optarg, varlen);
 			break;
 		case 'd':
-			printf("data length %d\n", (int)strlen(optarg));
 			str = strdup(optarg);
 			if (!str) {
 				printf ("error: insufficient memory was available\n");
 				goto error;
 			}
 			datalen = get_data_len(optarg);
-			printf("datalen %d\n", datalen);
 			if (datalen < 0)
 				goto error;
 			if (datalen != 0) {
