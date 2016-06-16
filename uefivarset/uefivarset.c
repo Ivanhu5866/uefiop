@@ -230,8 +230,6 @@ static int variableset(
 	setvariable.status = status;
 	ioret = ioctl(fd, EFI_RUNTIME_SET_VARIABLE, &setvariable);
 
-	printf ("status 0x%lx\n", *status);
-
 	return ioret;
 
 }
@@ -359,8 +357,7 @@ int main(int argc, char **argv)
 		datalen = 0;
 
 	variableset(fd, datalen, varname, data, &guid, &status);
-	if (status != 0)
-		printf ("setvariable error! status: 0x%lx\n", status);
+	print_status_info(status);
 
 	if (!varname)
 		free(varname);
