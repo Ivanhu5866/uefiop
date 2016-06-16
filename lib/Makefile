@@ -2,6 +2,7 @@ CC      = gcc
 CFLAGS  = -c
 RM      = rm -f
 AR	= ar crs
+INCDIR	= -I../include
 
 TARGETS := libutils.a
 
@@ -9,7 +10,7 @@ $(TARGETS): *.o
 	@$(AR) $@ $<
 
 %.o: %.c
-	@$(CC) $(CFLAGS) $^
+	@$(CC) $(CFLAGS) $^ $(INCDIR)
 
 .PHONY: clean
 clean:
