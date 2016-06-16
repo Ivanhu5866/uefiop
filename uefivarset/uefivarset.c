@@ -44,6 +44,7 @@
 #include <efi_runtime.h>
 
 #include "uefivarset.h"
+#include "utils.h"
 
 static uint32_t attributes =
 	EFI_VARIABLE_NON_VOLATILE |
@@ -89,11 +90,6 @@ static void usage(void)
 		"uefivarset");
 }
 
-static void version(void)
-{
-	printf("version 0.1.0\n");
-}
-
 static int init_driver(void)
 {
 	int fd;
@@ -112,7 +108,6 @@ static int check_segment(const char *str, size_t len)
 	}
 	return 0;
 }
-
 
 static int string_to_guid(const char *str, efi_guid *guid)
 {
