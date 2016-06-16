@@ -76,17 +76,19 @@ static void usage(void)
 			"--file <varfile>\n"
 		"This application helps to set UEFI variable with runtime services.\n\n"
 		"Options:\n"
-		"\t--guid <guid>      the guid of the variable\n"
+		"\t--guid -g <guid>	the guid of the variable\n"
 		"\t	ex. uefivarset -g 12345678-1234-1234-1234-112233445566\n"
-		"\t--name <varname>   the name of the variable\n"
+		"\t--name -n <varname>	the name of the variable\n"
 		"\t	ex. uefivarset -n Test\n" 		
-		"\t--data <data>      the date in hex of the variable\n"
+		"\t--data -d <data>	the date in hex of the variable\n"
 		"\t	ex. uefivarset -d \"11 22 33 ff\"\n"
-		"\t--file <file>      the date of the variable\n"
+		"\t--file -f <file>	the date of the variable\n"
 		"\t	ex. uefivarset -f test.dat\n"
 		"\t	if data and file exist at the same time, the data will be set\n"
-		"\t--delete <file>      delete the variable\n"
-		"\t	ex. uefivarset -g 12345678-1234-1234-1234-112233445566 -name Test -D\n",
+		"\t--delete -D <file>	delete the variable\n"
+		"\t	ex. uefivarset -g 12345678-1234-1234-1234-112233445566 -name Test -D\n"
+		"\t--version -V		show version\n"
+		"\t--help -h		show this menu\n",
 		"uefivarset");
 }
 
