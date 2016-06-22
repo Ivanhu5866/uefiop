@@ -43,7 +43,7 @@
 
 #include <efi_runtime.h>
 
-#include "uefivarset.h"
+#include "uefiop.h"
 #include "utils.h"
 
 static uint32_t attributes =
