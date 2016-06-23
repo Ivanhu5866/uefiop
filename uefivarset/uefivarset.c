@@ -90,7 +90,7 @@ static void usage(void)
 		"\t	ex. uefivarset -f test.dat\n"
 		"\t	if data and file exist at the same time, the data will be set\n"
 		"\t--delete -D <file>	delete the variable\n"
-		"\t	ex. uefivarset -g 12345678-1234-1234-1234-112233445566 -name Test -D\n"
+		"\t	ex. uefivarset -g 12345678-1234-1234-1234-112233445566 -n Test -D\n"
 		"\t--version -V		show version\n"
 		"\t--help -h		show this menu\n",
 		"uefivarset");
