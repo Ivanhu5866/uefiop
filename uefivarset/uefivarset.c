@@ -46,11 +46,6 @@
 #include "uefiop.h"
 #include "utils.h"
 
-static uint32_t attributes =
-	EFI_VARIABLE_NON_VOLATILE |
-	EFI_VARIABLE_BOOTSERVICE_ACCESS |
-	EFI_VARIABLE_RUNTIME_ACCESS;
-
 typedef struct {
 	uint32_t	a;
 	uint16_t	b;
@@ -63,6 +58,7 @@ static struct option options[] = {
 	{ "guid", required_argument, NULL, 'g' },
 	{ "data", required_argument, NULL, 'd' },
 	{ "name", required_argument, NULL, 'n' },
+	{ "attr", required_argument, NULL, 'a' },
 	{ "file", required_argument, NULL, 'f' },
 	{ "delete", required_argument, NULL, 'D' },
 	{ "help", no_argument, NULL, 'h' },
@@ -82,6 +78,14 @@ static void usage(void)
 		"\t	ex. uefivarset -n Test\n" 		
 		"\t--data -d <data>	the date in hex of the variable\n"
 		"\t	ex. uefivarset -d \"11 22 33 ff\"\n"
+		"\t--attr -a <attr>     the attribute of the variable(default 0x00000007)\n"
+		"\t	EFI_VARIABLE_NON_VOLATILE 	0x00000001\n"
+		"\t	EFI_VARIABLE_BOOTSERVICE_ACCESS	0x00000002\n"
+		"\t	EFI_VARIABLE_RUNTIME_ACCESS	0x00000004\n"
+		"\t	EFI_VARIABLE_HARDWARE_ERROR_RECORD	0x00000008\n"
+		"\t	EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS 0x00000020\n"
+		"\t	EFI_VARIABLE_APPEND_WRITE	0x00000040\n"
+		"\t	ex. uefivarset -a 0x7\n"
 		"\t--file -f <file>	the date of the variable\n"
 		"\t	ex. uefivarset -f test.dat\n"
 		"\t	if data and file exist at the same time, the data will be set\n"
@@ -217,6 +221,7 @@ static int variableset(
 	uint16_t *varname,
 	uint8_t *data,
 	efi_guid *gtestguid,
+	uint32_t attr,
 	uint64_t *status)
 {
 	int ioret;
@@ -224,7 +229,7 @@ static int variableset(
 
 	setvariable.VariableName = varname;
 	setvariable.VendorGuid = (EFI_GUID *)gtestguid;
-	setvariable.Attributes = attributes;
+	setvariable.Attributes = attr;
 	setvariable.DataSize = datasize;
 	setvariable.Data = data;
 	setvariable.status = status;
@@ -251,6 +256,10 @@ int main(int argc, char **argv)
 	FILE *fp;
 	uint64_t flen = 0, frlen = 0;
 	bool del_var = false;
+	uint32_t attributes =
+		EFI_VARIABLE_NON_VOLATILE |
+		EFI_VARIABLE_BOOTSERVICE_ACCESS |
+		EFI_VARIABLE_RUNTIME_ACCESS;
 
 	fd = init_driver();
 	if (fd == -1) {
@@ -260,7 +269,7 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		int idx;
-		c = getopt_long(argc, argv, "g:n:d:f:VhD", options, &idx);
+		c = getopt_long(argc, argv, "g:n:a:d:f:VhD", options, &idx);
 		if (c == -1)
 			break;
 
@@ -300,6 +309,9 @@ int main(int argc, char **argv)
 			}
 			get_data(str, data);
 			free(str);
+			break;
+		case 'a':
+			attributes = strtoul(optarg, NULL, 16);
 			break;
 		case 'f':
 			fp = fopen(optarg, "rb");
@@ -355,8 +367,9 @@ int main(int argc, char **argv)
 
 	if (del_var)
 		datalen = 0;
+	printf ("attribute is 0x%x\n", attributes);
 
-	variableset(fd, datalen, varname, data, &guid, &status);
+	variableset(fd, datalen, varname, data, &guid, attributes, &status);
 	print_status_info(status);
 
 	if (!varname)
