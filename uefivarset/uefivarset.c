@@ -38,7 +38,6 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <getopt.h>
-#include <byteswap.h>
 
 #include <efi_runtime.h>
 
@@ -46,14 +45,6 @@
 #include "utils.h"
 
 static int fd;
-
-typedef struct {
-	uint32_t	a;
-	uint16_t	b;
-	uint16_t	c;
-	uint16_t	d;
-	uint8_t		e[6];
-} efi_guid;
 
 static struct option options[] = {
 	{ "guid", required_argument, NULL, 'g' },
@@ -95,80 +86,6 @@ static void usage(void)
 		"\t--version -V		show version\n"
 		"\t--help -h		show this menu\n",
 		"uefivarset");
-}
- 
-static int check_segment(const char *str, size_t len)
-{
-	int i;
-	for(i = 0; i < len; i++) {
-		if ((str[i] >= '0' && str[i] <= '9') || ((str[i] | 0x20) >= 'a' && (str[i] | 0x20) <= 'f'))
-			continue;
-		return -1;
-	}
-	return 0;
-}
-
-static int string_to_guid(const char *str, efi_guid *guid)
-{
-	int i;
-	char bytes_8[9] = "";
-	char bytes_4[5] = "";
-	char bytes_2[3] = "";
-	size_t slen = strlen(str);
-	size_t guidlen = strlen("12345678-1234-1234-1234-112233445566");
-
-	if (slen == guidlen + 2) {
-		if (str[0] != '{' || str[slen - 1] != '}') {
-			return -1;
-		}
-		str++;
-		slen -= 2;
-	}
-
-	if (slen != guidlen)
-		return -1;
-
-	if (str[8] != '-' || str[13] != '-' || str[18] != '-' ||
-			str[23] != '-')
-		return -1;
-
-	strncpy(bytes_8, str, 8);
-	if (check_segment(bytes_8, 8) < 0)
-		return -1;
-	guid->a = (uint32_t)strtoul(bytes_8, NULL, 16);
-
-	strncpy(bytes_4, str + 9, 4);
-	if (check_segment(bytes_4, 4) < 0)
-		return -1;
-	guid->b = (uint16_t)strtoul(bytes_4, NULL, 16);
-
-	strncpy(bytes_4, str + 14, 4);
-	if (check_segment(bytes_4, 4) < 0)
-		return -1;
-	guid->c = (uint16_t)strtoul(bytes_4, NULL, 16);
-
-	strncpy(bytes_4, str + 19, 4);
-	if (check_segment(bytes_4, 4) < 0)
-		return -1;
-	guid->d = bswap_16((uint16_t)strtoul(bytes_4, NULL, 16));
-
-	for (i = 0 ; i < 6 ; i++) {
-		strncpy(bytes_2, str + 24 + (2 * i), 2);
-		if (check_segment(bytes_2, 2) < 0)
-			return -1;
-		guid->e[i] = (uint8_t)strtoul(bytes_2, NULL, 16);
-	}
-	return 0;
-}
-
-static void str_to_ucs(uint16_t *des, const char *str, size_t len)
-{
-	size_t i;
-	for (i = 0; i < len; i++)
-		des[i] = (uint16_t)str[i];
-	des[i] = 0;
-
-	return;
 }
 
 static size_t get_data_len(char *str)

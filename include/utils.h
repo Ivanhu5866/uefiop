@@ -72,10 +72,21 @@
 #define EFI_IP_ADDRESS_CONFLICT		(34 | HIGH_BIT_SET)
 #define EFI_HTTP_ERROR			(35 | HIGH_BIT_SET)
 
+typedef struct {
+	uint32_t	a;
+	uint16_t	b;
+	uint16_t	c;
+	uint16_t	d;
+	uint8_t		e[6];
+} efi_guid;
+
 void print_status_info(const uint64_t status);
 void version(void);
 int init_driver(void);
 void deinit_driver(int fd);
+int check_segment(const char *str, size_t len);
+int string_to_guid(const char *str, efi_guid *guid);
+void str_to_ucs(uint16_t *des, const char *str, size_t len);
 
 #endif /* _UEFIOP_UTILS_ */
 
