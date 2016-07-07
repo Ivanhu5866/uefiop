@@ -37,7 +37,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <fcntl.h>
 #include <getopt.h>
 #include <byteswap.h>
 
@@ -45,6 +44,8 @@
 
 #include "uefiop.h"
 #include "utils.h"
+
+static int fd;
 
 typedef struct {
 	uint32_t	a;
@@ -95,15 +96,7 @@ static void usage(void)
 		"\t--help -h		show this menu\n",
 		"uefivarset");
 }
-
-static int init_driver(void)
-{
-	int fd;
-
-	fd = open("/dev/efi_runtime", O_WRONLY | O_RDWR);
-	return fd;
-}
-
+ 
 static int check_segment(const char *str, size_t len)
 {
 	int i;
@@ -242,7 +235,7 @@ static int variableset(
 int main(int argc, char **argv)
 {
 
-	int c, fd;
+	int c;
 	int rc;
 	efi_guid guid;
 	uint16_t *varname;
@@ -260,12 +253,6 @@ int main(int argc, char **argv)
 		EFI_VARIABLE_NON_VOLATILE |
 		EFI_VARIABLE_BOOTSERVICE_ACCESS |
 		EFI_VARIABLE_RUNTIME_ACCESS;
-
-	fd = init_driver();
-	if (fd == -1) {
-		printf ("Cannot open efi_runtime driver. Aborted.\n");
-		return EXIT_FAILURE;
-	}
 
 	for (;;) {
 		int idx;
@@ -369,6 +356,12 @@ int main(int argc, char **argv)
 		datalen = 0;
 	printf ("attribute is 0x%x\n", attributes);
 
+	fd = init_driver();
+	if (fd == -1) {
+		printf ("Cannot open efi_runtime driver. Aborted.\n");
+		return EXIT_FAILURE;
+	}
+
 	variableset(fd, datalen, varname, data, &guid, attributes, &status);
 	print_status_info(status);
 
@@ -381,7 +374,7 @@ int main(int argc, char **argv)
 	if (!fdata)
 		free(data);
 
-	close(fd);
+	deinit_driver(fd);
 
 	return EXIT_SUCCESS;
 
@@ -398,7 +391,7 @@ error:
 	if (!fdata)
 		free(fdata);
 
-	close(fd);
+	deinit_driver(fd);
 
 	return EXIT_FAILURE;
 }

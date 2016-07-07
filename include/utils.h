@@ -74,6 +74,8 @@
 
 void print_status_info(const uint64_t status);
 void version(void);
+int init_driver(void);
+void deinit_driver(int fd);
 
 #endif /* _UEFIOP_UTILS_ */
 

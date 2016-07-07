@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <fcntl.h>
 #include "utils.h"
 
 typedef struct {
@@ -96,3 +97,12 @@ void version(void)
 	printf("version 0.1.0\n");
 }
 
+int init_driver(void)
+{
+	return open("/dev/efi_runtime", O_WRONLY | O_RDWR);
+}
+
+void deinit_driver(int fd)
+{
+	close(fd);
+}
