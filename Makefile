@@ -1,4 +1,4 @@
-SUBDIRS = lib uefivarset
+SUBDIRS = lib uefivarset uefivarget
 
 .PHONY: all clean
 
