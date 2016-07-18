@@ -31,10 +31,12 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <string.h>
 #include <byteswap.h>
+#include <unistd.h>
 
 #include "utils.h"
 
