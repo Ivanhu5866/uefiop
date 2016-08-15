@@ -110,6 +110,8 @@ int main(int argc, char **argv)
 	bool got_guid = false;
 	uint32_t attributes;
 	int i;
+	FILE *fp = NULL;
+	size_t iwrite;
 
 	for (;;) {
 		int idx;
@@ -136,7 +138,11 @@ int main(int argc, char **argv)
 			str_to_ucs(varname, optarg, varlen);
 			break;
 		case 'f':
-			/* TBD */
+			fp = fopen(optarg, "wb");
+			if (!fp) {
+			printf("error: cannot open file\n");
+				goto error;
+			}
 			break;
 		case 'V':
 			version();
@@ -181,10 +187,19 @@ int main(int argc, char **argv)
 	}
 
 	if (status == EFI_SUCCESS) {
-		printf ("Data: \n"); 
-		for (i = 0; i < datalen; i++)
-			printf("%2.2x", data[i]);
-		printf ("\n");
+		if (fp) {
+			iwrite = fwrite(data, 1, datalen, fp);
+			if (iwrite < datalen) {
+				printf ("error: fail to write data to file\n");
+				goto error;
+			}
+			fclose(fp);
+		} else  {
+			printf ("Data: \n");
+			for (i = 0; i < datalen; i++)
+				printf("%2.2x", data[i]);
+			printf ("\n");
+		}
 	}
 	print_status_info(status);
 
@@ -204,6 +219,9 @@ error:
 
 	if (!data)
 		free(data);
+
+	if (!fp)
+		fclose(fp);
 
 	deinit_driver(fd);
 
