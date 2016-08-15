@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 	}
 
 	data = malloc(datalen);
-	if (!varname) {
+	if (!data) {
 		printf ("error: cannot alloc memory for data\n");
 		goto error;
 	}
@@ -169,11 +169,22 @@ int main(int argc, char **argv)
 	}
 
 	variableget(fd, &datalen, varname, data, &guid, &attributes, &status);
+
+	if (status == EFI_BUFFER_TOO_SMALL) {
+		data = realloc(data, datalen);
+		if (!data) {
+			printf ("error: cannot realloc memory for data\n");
+			goto error;
+		}
+		variableget(fd, &datalen, varname, data, &guid, &attributes,
+				&status);
+	}
+
 	if (status == EFI_SUCCESS) {
 		printf ("Data: \n"); 
 		for (i = 0; i < datalen; i++)
 			printf("%2.2x", data[i]);
-		printf ("\n"); 
+		printf ("\n");
 	}
 	print_status_info(status);
 
