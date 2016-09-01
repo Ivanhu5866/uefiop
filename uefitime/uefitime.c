@@ -61,6 +61,31 @@ static void usage(void)
 		"uefitime");
 }
 
+static void print_time_info(EFI_TIME *time, EFI_TIME_CAPABILITIES *cap)
+{
+	if (time) {
+		printf ("TIME\n");
+		printf ("  Year:       %d\n", time->Year);
+		printf ("  Month:      %d\n", time->Month);
+		printf ("  Day:        %d\n", time->Day);
+		printf ("  Hour:       %d\n", time->Hour);
+		printf ("  Minute:     %d\n", time->Minute);
+		printf ("  Second:     %d\n", time->Second);
+		printf ("  Pad1:       %d\n", time->Pad1);
+		printf ("  Nanosecond: %d\n", time->Nanosecond);
+		printf ("  TimeZone:   %d\n", time->TimeZone);
+		printf ("  Daylight:   %d\n", time->Daylight);
+		printf ("  Pad2:       %d\n", time->Pad2);
+	}
+	if (cap) {
+		printf ("CAPABILITIES\n");
+		printf ("  Resolution: %d\n", cap->Resolution);
+		printf ("  Accuracy:   %d\n", cap->Accuracy);
+		printf ("  SetsToZero: %s\n", cap->SetsToZero == 1
+							? "TRUE" : "FALSE");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int c;
@@ -102,19 +127,9 @@ int main(int argc, char **argv)
 
 		ioctl(fd, EFI_RUNTIME_GET_TIME, &gettime);
 
-		if (status == EFI_SUCCESS) {
-			printf ("Year:       %d\n", gettime.Time->Year);
-			printf ("Month:      %d\n", gettime.Time->Month);
-			printf ("Day:        %d\n", gettime.Time->Day);
-			printf ("Hour:       %d\n", gettime.Time->Hour);
-			printf ("Minute:     %d\n", gettime.Time->Minute);
-			printf ("Second:     %d\n", gettime.Time->Second);
-			printf ("Pad1:       %d\n", gettime.Time->Pad1);
-			printf ("Nanosecond: %d\n", gettime.Time->Nanosecond);
-			printf ("TimeZone:   %d\n", gettime.Time->TimeZone);
-			printf ("Daylight:   %d\n", gettime.Time->Daylight);
-			printf ("Pad2:       %d\n", gettime.Time->Pad2);
-		}
+		if (status == EFI_SUCCESS)
+			print_time_info(gettime.Time, gettime.Capabilities);
+
 		print_status_info(status);
 	}
 
