@@ -1,4 +1,4 @@
-SUBDIRS = lib uefivarset uefivarget
+SUBDIRS = lib uefivarset uefivarget uefitime
 
 .PHONY: all clean
 
