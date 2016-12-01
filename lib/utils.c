@@ -37,8 +37,16 @@
 #include <string.h>
 #include <byteswap.h>
 #include <unistd.h>
+#include <stdbool.h> 
+#include <sys/stat.h>
+#include <paths.h>
+#include <sys/wait.h>
 
+#include "uefiop.h"
 #include "utils.h"
+
+static char *efi_dev_name = NULL;
+static char *module_name = NULL;
 
 typedef struct {
 	const uint64_t statusvalue;
@@ -100,16 +108,6 @@ void print_status_info(const uint64_t status)
 void version(void)
 {
 	printf("version 0.1.0\n");
-}
-
-int init_driver(void)
-{
-	return open("/dev/efi_runtime", O_WRONLY | O_RDWR);
-}
-
-void deinit_driver(int fd)
-{
-	close(fd);
 }
 
 int check_segment(const char *str, size_t len)
@@ -184,4 +182,208 @@ void str_to_ucs(uint16_t *des, const char *str, size_t len)
 	des[i] = 0;
 
 	return;
+}
+
+static int check_device(char *devname)
+{
+	struct stat statbuf;
+
+	if (stat(devname, &statbuf))
+		return UEFIOP_ERROR;
+
+	if (S_ISCHR(statbuf.st_mode)) {
+		efi_dev_name = devname;
+		return UEFIOP_OK;
+	}
+	return UEFIOP_ERROR;
+}
+
+static int check_module_loaded(
+	char *module,
+	bool *loaded)
+{
+	FILE *fp;
+
+	*loaded = false;
+
+	if ((fp = fopen("/proc/modules", "r")) != NULL) {
+		char buffer[1024];
+
+		while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+			if (strstr(buffer, module)) {
+				*loaded = true;
+				break;
+			}
+		}
+		(void)fclose(fp);
+		return UEFIOP_OK;
+	}
+	printf("Could not open /proc/modules to check if efi module '%s' is loaded.\n", module);
+
+	return UEFIOP_ERROR;
+}
+
+
+static int check_module_loaded_no_dev(char *module)
+{
+	bool loaded;
+
+	if (check_module_loaded(module, &loaded) != UEFIOP_OK)
+		return UEFIOP_OK;
+	if (loaded) {
+		printf("Module '%s' is already loaded, but device not available.\n", module);
+		return UEFIOP_ERROR;
+	}
+	return UEFIOP_OK;
+}
+
+static int uefiop_exec(const char *command)
+{
+	pid_t pid;
+
+	pid = fork();
+	switch (pid) {
+	case -1:
+		/* Ooops */
+		return UEFIOP_ERROR;
+	case 0:
+		/* Child */
+		execl(_PATH_BSHELL, "sh", "-c", command, NULL);
+		_exit(UEFIOP_ERROR);
+	default:
+		/* Parent */
+		wait(NULL);
+		return UEFIOP_OK;
+	}
+}
+
+static int load_module(
+	char *module,
+	char *devname)
+{
+	char cmd[80];
+	bool loaded;
+
+	snprintf(cmd, sizeof(cmd), "modprobe %s", module);
+
+	if (uefiop_exec(cmd) != UEFIOP_OK)
+		return UEFIOP_ERROR;
+
+	if (check_module_loaded(module, &loaded) != UEFIOP_OK)
+		return UEFIOP_ERROR;
+
+	if (!loaded)
+		return UEFIOP_ERROR;
+
+	if (check_device(devname) != UEFIOP_OK)
+		return UEFIOP_ERROR;
+
+	module_name = module;
+
+	return UEFIOP_OK;
+}
+
+
+static int lib_load_module()
+{
+	efi_dev_name = NULL;
+	module_name = NULL;
+
+	/* Check if dev is already available */
+	if (check_device("/dev/efi_test") == UEFIOP_OK)
+		return UEFIOP_OK;
+	if (check_device("/dev/efi_runtime") == UEFIOP_OK)
+		return UEFIOP_OK;
+
+	/* Since the devices can't be found, the module should be not loaded */
+	if (check_module_loaded_no_dev("efi_test") != UEFIOP_OK)
+		return UEFIOP_ERROR;
+	if (check_module_loaded_no_dev("efi_runtime") != UEFIOP_OK)
+		return UEFIOP_ERROR;
+
+	/* Now try to load the module */
+
+	if (load_module("efi_test", "/dev/efi_test") == UEFIOP_OK)
+		return UEFIOP_OK;
+	if (load_module("efi_runtime", "/dev/efi_runtime") == UEFIOP_OK)
+		return UEFIOP_OK;
+
+	printf("Failed to load efi runtime module.\n");
+	return UEFIOP_ERROR;
+}
+
+static int lib_unload_module()
+{
+	bool loaded;
+	int status;
+	char cmd[80], *tmp_name = module_name;
+
+	efi_dev_name = NULL;
+
+	/* No module, not much to do */
+	if (!module_name)
+		return UEFIOP_OK;
+
+	module_name = NULL;
+
+	/* If it is not loaded, no need to unload it */
+	if (check_module_loaded(tmp_name, &loaded) != UEFIOP_OK)
+		return UEFIOP_ERROR;
+	if (!loaded)
+		return UEFIOP_OK;
+
+	snprintf(cmd, sizeof(cmd), "modprobe -r %s", tmp_name);
+	if (uefiop_exec(cmd) != UEFIOP_OK) {
+		printf("Failed to unload module '%s'.\n", tmp_name);
+		return UEFIOP_ERROR;
+	}
+
+	/* Module should not be loaded at this point */
+	if (check_module_loaded(tmp_name, &loaded) != UEFIOP_OK)
+		return UEFIOP_ERROR;
+	if (loaded) {
+		printf("Failed to unload module '%s'.\n", tmp_name);
+		return UEFIOP_ERROR;
+	}
+
+	return UEFIOP_OK;
+}
+
+static int lib_efi_runtime_open(void)
+{
+
+	if (!efi_dev_name)
+		return -1;
+
+	return open(efi_dev_name, O_WRONLY | O_RDWR);
+}
+
+static int lib_efi_runtime_close(int fd)
+{
+	return close(fd);
+}
+
+int init_driver(void)
+{
+
+	int fd;
+
+	if (lib_load_module() != UEFIOP_OK) {
+		printf("Cannot load efi runtime module. Aborted.\n");
+		return UEFIOP_ERROR;
+	}
+
+	fd = lib_efi_runtime_open();
+	if (fd == -1) {
+		printf("Cannot open efi runtime driver. Aborted.\n");
+		return UEFIOP_ERROR;
+	}
+
+	return fd;
+}
+
+void deinit_driver(int fd)
+{
+	lib_efi_runtime_close(fd);
+	lib_unload_module();
 }
