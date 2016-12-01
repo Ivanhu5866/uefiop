@@ -33,6 +33,9 @@
 #ifndef _UEFIOP_H_
 #define _UEFIOP_H_
 
+#define UEFIOP_OK 0
+#define UEFIOP_ERROR -1
+
 /*
  * Variable Attributes
  */ 
