@@ -1,0 +1,5 @@
+uefiop (00.05.00-0ubuntu1) zesty; urgency=low
+
+  * Initial release. (uefivarset uefivarget and partial uefitime supported)
+
+ -- Ivan Hu <ivan.hu@ubuntu.com>  Mon, 12 Dec 2016 14:26:35 +0800
