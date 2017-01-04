@@ -44,6 +44,7 @@
 
 #include "uefiop.h"
 #include "utils.h"
+#include "uefiop_version.h"
 
 static char *efi_dev_name = NULL;
 static char *module_name = NULL;
@@ -107,7 +108,7 @@ void print_status_info(const uint64_t status)
 
 void version(void)
 {
-	printf("version 0.1.0\n");
+	printf("Version %s, %s\n", UEFIOP_VERSION, UEFIOP_DATE);
 }
 
 int check_segment(const char *str, size_t len)
