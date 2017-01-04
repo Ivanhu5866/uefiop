@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Ivan Hu <ivan.hu@canonical.com>
+ * Copyright (C) 2016-2017 Ivan Hu <ivan.hu@canonical.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
