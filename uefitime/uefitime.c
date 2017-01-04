@@ -61,6 +61,8 @@ static void usage(void)
 		"\t--settime -s		set current time and date information\n"
 		"\t	<time>  \"Year:Month:Day:Hour:Minute:Second:Pad1:Nanosecond:TimeZone:Daylight:Pad2\"\n"
 		"\t	ex. uefitime -s \"2016:10:01:02:10:20:0:0:8:1:0\"\n"
+		"\t--getwakeup -G	get current wakeup alarm clock setting\n"
+		"\t	ex. uefitime -G \n"
 		"\t--version -V		show version\n"
 		"\t--help -h		show this menu\n",
 		"uefitime");
@@ -157,21 +159,27 @@ int main(int argc, char **argv)
 	int c;
 	struct efi_gettime gettime;
 	struct efi_settime settime;
+	struct efi_getwakeuptime getwakeuptime;
 	EFI_TIME efi_time;
 	EFI_TIME_CAPABILITIES efi_time_cap;
 	bool get = false;
 	bool set = false;
+	bool getwakeup = false;
 	uint64_t status;
+	uint8_t enabled, pending;
 
 	for (;;) {
 		int idx;
-		c = getopt_long(argc, argv, "gs:Vh", options, &idx);
+		c = getopt_long(argc, argv, "gs:GVh", options, &idx);
 		if (c == -1)
 			break;
 
 		switch (c) {
 		case 'g':
 			get = true;
+			break;
+		case 'G':
+			getwakeup = true;
 			break;
 		case 's':
 			set = true;
@@ -192,8 +200,8 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (!get && !set) {
-		printf ("Need to specify set or get time.\n");
+	if (!get && !set && !getwakeup) {
+		printf ("Need to specify set, get or getwakup time.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -221,6 +229,24 @@ int main(int argc, char **argv)
 
 		ioctl(fd, EFI_RUNTIME_SET_TIME, &settime);
 
+		print_status_info(status);
+	}
+
+	if (getwakeup) {
+		getwakeuptime.Enabled = &enabled;
+		getwakeuptime.Pending = &pending;
+		getwakeuptime.Time = &efi_time;
+		getwakeuptime.status = &status;
+
+		ioctl(fd, EFI_RUNTIME_GET_WAKETIME, &getwakeuptime);
+
+		if (status == EFI_SUCCESS) {
+			printf ("Enable: %s\n", *getwakeuptime.Enabled == 1
+							? "TRUE" : "FALSE");
+			printf ("Pending: %s\n", *getwakeuptime.Pending == 1
+							? "TRUE" : "FALSE");
+			print_time_info(getwakeuptime.Time, NULL);
+		}
 		print_status_info(status);
 	}
 
