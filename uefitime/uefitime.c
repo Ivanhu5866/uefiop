@@ -46,6 +46,7 @@ static int fd;
 static struct option options[] = {
 	{ "gettime", no_argument, NULL, 'g' },
 	{ "settime", required_argument, NULL, 's' },
+	{ "getwakeup", no_argument, NULL, 'G' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "version", no_argument, NULL, 'V' },
 	{ NULL, 0, NULL, 0 },
