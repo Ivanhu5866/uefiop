@@ -11,13 +11,13 @@ Current status: Draft
 
 Current capabilities:
 * set and delete uefi variables
-
-Todo
 * get variable
-* get next variable name
-* query variable info
 * set and get wakeup time
 * set and get time
+
+Todo
+* get next variable name
+* query variable info
 * get next high monotonic count
 * query capsule capabilities
 * update capsule
@@ -25,8 +25,8 @@ Todo
 
 === dependency ===
 
-Uefiop use the kernel module efi_runtime to manipulate the uefi runtime service.
+Uefiop use the kernel module efi-runtime to manipulate the uefi runtime service.
 The source code link:
-https://github.com/Ivanhu5866/efi_runtime.git
+https://github.com/Ivanhu5866/efi-runtime.git
 
 
