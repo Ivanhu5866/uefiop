@@ -47,6 +47,7 @@ static struct option options[] = {
 	{ "gettime", no_argument, NULL, 'g' },
 	{ "settime", required_argument, NULL, 's' },
 	{ "getwakeup", no_argument, NULL, 'G' },
+	{ "setwakeup", required_argument, NULL, 'S' },
 	{ "help", no_argument, NULL, 'h' },
 	{ "version", no_argument, NULL, 'V' },
 	{ NULL, 0, NULL, 0 },
@@ -64,6 +65,10 @@ static void usage(void)
 		"\t	ex. uefitime -s \"2016:10:01:02:10:20:0:0:8:1:0\"\n"
 		"\t--getwakeup -G	get current wakeup alarm clock setting\n"
 		"\t	ex. uefitime -G \n"
+		"\t--Setwakeup -S	set current wakeup alarm clock setting\n"
+		"\t	uefitime -S <enable>,<time>\n"
+		"\t	ex. uefitime -S \"True,2016:10:01:02:10:20:0:0:8:1:0\"\n"
+		"\t	ex. uefitime -S \"False\"\n"
 		"\t--version -V		show version\n"
 		"\t--help -h		show this menu\n",
 		"uefitime");
@@ -98,58 +103,73 @@ static void print_time_info(EFI_TIME *time, EFI_TIME_CAPABILITIES *cap)
 	}
 }
 
-static void parse_time(char *str, EFI_TIME *time)
+static void parse_time(char *str, EFI_TIME **time, bool *enable)
 {
 	char *pch;
 	char *saveptr1;
 
-	memset(time, 0, sizeof(EFI_TIME));
-	pch = strtok_r(str,":", &saveptr1);
-	if (pch != NULL) {
-		time->Year = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
-	}
-	
-	if (pch != NULL) {
-		time->Month = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+	memset(*time, 0, sizeof(EFI_TIME));
+	if (enable) {
+		pch = strtok_r(str, ",", &saveptr1);
+		if (pch != NULL) {
+			if (strstr(pch, "TRUE") || strstr(pch, "true")
+				|| strstr(pch, "True"))
+			*enable = true;
+			pch = strtok_r(NULL, ":", &saveptr1);
+		}
+	} else 
+		pch = strtok_r(str, ":", &saveptr1);
+
+	if (!pch) {
+		*time = NULL;
+		return;
 	}
 
 	if (pch != NULL) {
-		time->Day = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->Year = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 
 	if (pch != NULL) {
-		time->Hour = strtol(pch, NULL, 10);
+		(*time)->Month = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
+	}
+
+	if (pch != NULL) {
+		(*time)->Day = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
+	}
+
+	if (pch != NULL) {
+		(*time)->Hour = strtol(pch, NULL, 10);
 		pch = strtok_r(NULL,":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->Minute = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->Minute = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->Second = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->Second = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->Pad1 = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->Pad1 = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->Nanosecond = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->Nanosecond = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->TimeZone = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->TimeZone = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->Daylight = strtol(pch, NULL, 10);
-		pch = strtok_r(NULL,":", &saveptr1);
+		(*time)->Daylight = strtol(pch, NULL, 10);
+		pch = strtok_r(NULL, ":", &saveptr1);
 	}
 	if (pch != NULL) {
-		time->Pad2 = strtol(pch, NULL, 10);
+		(*time)->Pad2 = strtol(pch, NULL, 10);
 	}
 
 	return;
@@ -161,17 +181,21 @@ int main(int argc, char **argv)
 	struct efi_gettime gettime;
 	struct efi_settime settime;
 	struct efi_getwakeuptime getwakeuptime;
+	struct efi_setwakeuptime setwakeuptime;
 	EFI_TIME efi_time;
+	EFI_TIME *p_time = NULL;
 	EFI_TIME_CAPABILITIES efi_time_cap;
 	bool get = false;
 	bool set = false;
 	bool getwakeup = false;
+	bool setwakeup = false;
 	uint64_t status;
 	uint8_t enabled, pending;
+	bool enable = false;
 
 	for (;;) {
 		int idx;
-		c = getopt_long(argc, argv, "gs:GVh", options, &idx);
+		c = getopt_long(argc, argv, "gs:GS:Vh", options, &idx);
 		if (c == -1)
 			break;
 
@@ -184,7 +208,13 @@ int main(int argc, char **argv)
 			break;
 		case 's':
 			set = true;
-			parse_time(optarg, &efi_time);
+			p_time = &efi_time;
+			parse_time(optarg, &p_time, NULL);
+			break;
+		case 'S':
+			setwakeup = true;
+			p_time = &efi_time;
+			parse_time(optarg, &p_time, &enable);
 			break;
 		case 'V':
 			version();
@@ -201,13 +231,18 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (!get && !set && !getwakeup) {
-		printf ("Need to specify set, get or getwakup time.\n");
+	if (!get && !set && !getwakeup && !setwakeup) {
+		printf ("Need to specify set, get, getwakup or sewakup time.\n");
 		return EXIT_FAILURE;
 	}
 
 	if (get && set) {
 		printf ("Both set and get time specified.\n");
+		return EXIT_FAILURE;
+	}
+
+	if (getwakeup && setwakeup) {
+		printf ("Both set and get wakeup time specified.\n");
 		return EXIT_FAILURE;
 	}
 
@@ -251,6 +286,20 @@ int main(int argc, char **argv)
 		print_status_info(status);
 	}
 
+	if (setwakeup) {
+		if (enable && ((void *)p_time == NULL)) {
+			printf ("Enable the wakeup alarm, time parameter should not be NULL.\n");
+			return EXIT_FAILURE;
+		}
+		
+		setwakeuptime.Enabled = enable;
+		setwakeuptime.Time = (EFI_TIME *)p_time;
+		setwakeuptime.status = &status;
+
+		ioctl(fd, EFI_RUNTIME_SET_WAKETIME, &setwakeuptime);
+
+		print_status_info(status);
+	}
 	deinit_driver(fd);
 
 	return EXIT_SUCCESS;
