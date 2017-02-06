@@ -44,7 +44,7 @@
 #include "uefiop.h"
 #include "utils.h"
 
-static int fd;
+static int fd = -1;
 
 static struct option options[] = {
 	{ "guid", required_argument, NULL, 'g' },
@@ -102,10 +102,10 @@ int main(int argc, char **argv)
 	int c;
 	int rc;
 	efi_guid guid;
-	uint16_t *varname;
+	uint16_t *varname = NULL;
 	size_t varlen = 0;
 	uint64_t datalen = 1024;
-	uint8_t *data;
+	uint8_t *data = NULL;
 	uint64_t status;
 	bool got_guid = false;
 	uint32_t attributes;
@@ -203,10 +203,10 @@ int main(int argc, char **argv)
 	}
 	print_status_info(status);
 
-	if (!varname)
+	if (varname)
 		free(varname);
 
-	if (!data)
+	if (data)
 		free(data);
 
 	deinit_driver(fd);
@@ -214,13 +214,13 @@ int main(int argc, char **argv)
 	return EXIT_SUCCESS;
 
 error:
-	if (!varname)
+	if (varname)
 		free(varname);
 
-	if (!data)
+	if (data)
 		free(data);
 
-	if (!fp)
+	if (fp)
 		fclose(fp);
 
 	deinit_driver(fd);
