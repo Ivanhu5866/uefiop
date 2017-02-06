@@ -385,6 +385,7 @@ int init_driver(void)
 
 void deinit_driver(int fd)
 {
-	lib_efi_runtime_close(fd);
+	if (fd != -1)
+		lib_efi_runtime_close(fd);
 	lib_unload_module();
 }
