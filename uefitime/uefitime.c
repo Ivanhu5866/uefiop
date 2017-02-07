@@ -233,17 +233,17 @@ int main(int argc, char **argv)
 
 	if (!get && !set && !getwakeup && !setwakeup) {
 		printf ("Need to specify set, get, getwakup or sewakup time.\n");
-		return EXIT_FAILURE;
+		goto error;
 	}
 
 	if (get && set) {
 		printf ("Both set and get time specified.\n");
-		return EXIT_FAILURE;
+		goto error;
 	}
 
 	if (getwakeup && setwakeup) {
 		printf ("Both set and get wakeup time specified.\n");
-		return EXIT_FAILURE;
+		goto error;
 	}
 
 	if (get) {
@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 	if (setwakeup) {
 		if (enable && ((void *)p_time == NULL)) {
 			printf ("Enable the wakeup alarm, time parameter should not be NULL.\n");
-			return EXIT_FAILURE;
+			goto error;
 		}
 		
 		setwakeuptime.Enabled = enable;
@@ -303,6 +303,12 @@ int main(int argc, char **argv)
 	deinit_driver(fd);
 
 	return EXIT_SUCCESS;
+
+error:
+
+	deinit_driver(fd);
+
+	return EXIT_FAILURE;
 
 }
 
