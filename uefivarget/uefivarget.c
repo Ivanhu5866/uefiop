@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 	fd = init_driver();
 	if (fd == -1) {
 		printf ("Cannot open efi_runtime driver. Aborted.\n");
-		return EXIT_FAILURE;
+		goto error;
 	}
 
 	variableget(fd, &datalen, varname, data, &guid, &attributes, &status);
