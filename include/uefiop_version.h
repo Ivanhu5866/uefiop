@@ -16,5 +16,5 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  *
  */
-#define UEFIOP_VERSION "V00.05.00"
-#define UEFIOP_DATE    "2016-12-12 14:44:16"
+#define UEFIOP_VERSION "V00.06.00"
+#define UEFIOP_DATE    "2017-02-08 06:30:59"
