@@ -1,3 +1,18 @@
+uefiop (00.06.00-0ubuntu1) zesty; urgency=low
+
+  * uefitime: add get wakeup time function
+  * update copyright year to 2017
+  * add the showing version function and script
+  * uefitime: fix the missing getwakeup option
+  * uefitime: add set wakeup time funciton
+  * update readme for efi-runtime path and Todo
+  * lib: add checking fd opened before close it
+  * fix some memory leak issue
+  * goto error handling before error exit
+  * uefitime: add error handling
+
+ -- Ivan Hu <ivan.hu@ubuntu.com>  Wed, 08 Feb 2017 14:28:45 +0800
+
 uefiop (00.05.00-0ubuntu1) zesty; urgency=low
 
   * Initial release. (uefivarset uefivarget and partial uefitime supported)
