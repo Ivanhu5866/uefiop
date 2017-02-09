@@ -41,7 +41,7 @@
 #include <efi_runtime.h>
 #include "utils.h"
 
-static int fd;
+static int fd = -1;
 
 static struct option options[] = {
 	{ "gettime", no_argument, NULL, 'g' },
