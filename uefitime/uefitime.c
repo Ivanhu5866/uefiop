@@ -55,8 +55,8 @@ static struct option options[] = {
 
 static void usage(void)
 {
-	printf("Usage: %s [options] --get --set <time>\n"
-		"This application helps to get and set current time date information with runtime services.\n\n"
+	printf("Usage: %s [options] --gettime --settime --getwakeup --setwakeup <time>\n"
+		"This application helps to get and set current time/date information and wakeup alarm with runtime services.\n\n"
 		"Options:\n"
 		"\t--gettime -g		get current time and date information\n"
 		"\t	ex. uefitime -g \n"
@@ -65,7 +65,7 @@ static void usage(void)
 		"\t	ex. uefitime -s \"2016:10:01:02:10:20:0:0:8:1:0\"\n"
 		"\t--getwakeup -G	get current wakeup alarm clock setting\n"
 		"\t	ex. uefitime -G \n"
-		"\t--Setwakeup -S	set current wakeup alarm clock setting\n"
+		"\t--setwakeup -S	set current wakeup alarm clock setting\n"
 		"\t	uefitime -S <enable>,<time>\n"
 		"\t	ex. uefitime -S \"True,2016:10:01:02:10:20:0:0:8:1:0\"\n"
 		"\t	ex. uefitime -S \"False\"\n"
