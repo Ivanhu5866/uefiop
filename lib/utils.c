@@ -185,6 +185,16 @@ void str_to_ucs(uint16_t *des, const char *str, size_t len)
 	return;
 }
 
+void ucs_to_str(char *des, const uint16_t *str, size_t len)
+{
+	size_t i;
+	for (i = 0; i < (len/2 - 1); i++)
+		des[i] = (char)str[i];
+	des[i] = 0;
+
+	return;
+}
+
 static int check_device(char *devname)
 {
 	struct stat statbuf;

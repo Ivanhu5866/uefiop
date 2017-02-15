@@ -87,6 +87,7 @@ void deinit_driver(int fd);
 int check_segment(const char *str, size_t len);
 int string_to_guid(const char *str, efi_guid *guid);
 void str_to_ucs(uint16_t *des, const char *str, size_t len);
+void ucs_to_str(char *des, const uint16_t *str, size_t len);
 
 #endif /* _UEFIOP_UTILS_ */
 
