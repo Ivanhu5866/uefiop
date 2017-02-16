@@ -14,9 +14,9 @@ Current capabilities:
 * get variable
 * set and get wakeup time
 * set and get time
+* get next variable name
 
 Todo
-* get next variable name
 * query variable info
 * get next high monotonic count
 * query capsule capabilities
