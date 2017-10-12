@@ -301,22 +301,22 @@ static int lib_load_module()
 	module_name = NULL;
 
 	/* Check if dev is already available */
-	if (check_device("/dev/efi_test") == UEFIOP_OK)
-		return UEFIOP_OK;
 	if (check_device("/dev/efi_runtime") == UEFIOP_OK)
+		return UEFIOP_OK;
+	if (check_device("/dev/efi_test") == UEFIOP_OK)
 		return UEFIOP_OK;
 
 	/* Since the devices can't be found, the module should be not loaded */
-	if (check_module_loaded_no_dev("efi_test") != UEFIOP_OK)
-		return UEFIOP_ERROR;
 	if (check_module_loaded_no_dev("efi_runtime") != UEFIOP_OK)
+		return UEFIOP_ERROR;
+	if (check_module_loaded_no_dev("efi_test") != UEFIOP_OK)
 		return UEFIOP_ERROR;
 
 	/* Now try to load the module */
 
-	if (load_module("efi_test", "/dev/efi_test") == UEFIOP_OK)
-		return UEFIOP_OK;
 	if (load_module("efi_runtime", "/dev/efi_runtime") == UEFIOP_OK)
+		return UEFIOP_OK;
+	if (load_module("efi_test", "/dev/efi_test") == UEFIOP_OK)
 		return UEFIOP_OK;
 
 	printf("Failed to load efi runtime module.\n");
