@@ -1,5 +1,5 @@
 SUBLIB = lib
-SUBDIRS = uefivarset uefivarget uefitime uefigetnextvarname
+SUBDIRS = uefivarset uefivarget uefitime uefigetnextvarname uefiresetsystem
 INSTALL = install
 prefix = /usr
 LIBDIR = $(prefix)/lib
