@@ -1,11 +1,11 @@
-=== OVERVIEW ===
+# OVERVIEW
 
-The uefiop is an application that allows users to manipulate UEFI runtime interfaces provided by Bios at runtime.
+The uefiop is an application that allows users to manipulate UEFI runtime interfaces provided by BIOS at runtime.
 
 The source code link:
 https://github.com/Ivanhu5866/uefiop.git
 
-=== STATUS === 
+# STATUS 
 
 Current status: Draft
 
@@ -23,10 +23,8 @@ Todo
 * update capsule
 * reset system
 
-=== dependency ===
+# dependency
 
 Uefiop use the kernel module efi-runtime to manipulate the uefi runtime service.
 The source code link:
 https://github.com/Ivanhu5866/efi-runtime.git
-
-
