@@ -15,13 +15,13 @@ Current capabilities:
 * set and get wakeup time
 * set and get time
 * get next variable name
+* reset system
 
 Todo
 * query variable info
 * get next high monotonic count
 * query capsule capabilities
 * update capsule
-* reset system
 
 === dependency ===
 
